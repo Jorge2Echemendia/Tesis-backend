@@ -1,80 +1,61 @@
-import { DataTypes } from "sequelize";
-import db from '../config/db.js';
+import mongoose from 'mongoose';
 
-const Tratamiento =db.define(
-    "tratamientos",
-    {
-        id_tratamiento: {
-          type: DataTypes.INTEGER,
-          primaryKey: true,
-          autoIncrement: true,
-        },
-        nombre_medicamento: {
-          type: DataTypes.STRING,
-          allowNull: false,
-          validate: {
-            notEmpty: true,
-          },
-        },
-        descripcion: {
-            type: DataTypes.STRING,
-            allowNull: false,
-            validate: {
-              notEmpty: true,
-            },
-          },
-          frecuencia: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-            validate: {
-              notEmpty: true,
-            },
-          },
-        hora_programada: {
-          type: DataTypes.DATE,
-          defaultValue: null,
-        },
-          id_paciente: {
-              type: DataTypes.INTEGER,
-              defaultValue:null,
-              references: {
-                  model: 'Paciente',
-                  key: 'id_paciente'
-              }
-          },
-          nombre_tratamiento: {
-            type: DataTypes.STRING,
-            allowNull: false,
-            validate: {
-              notEmpty: true,
-            },
-          },
-          tiempo_de_la_medicacion: {
-            type: DataTypes.STRING,
-            allowNull: false,
-            validate: {
-              notEmpty: true,
-            },
-          },
-        etapa: {
-          type: DataTypes.STRING,
-          allowNull: false,
-          validate: {
-            notEmpty: true,
-          },
-        },
-        id_usuario: {
-          type: DataTypes.INTEGER,
-          allowNull: true,
-      },
-      lente: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: false,
-      },
-      parche: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: false,
-      },
-      },
-    );
-    export default Tratamiento;
+const tratamientoSchema = new mongoose.Schema({
+    nombre_medicamento: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    descripcion: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    frecuencia: {
+        type: Number,
+        required: true
+    },
+    hora_programada: {
+        type: Date,
+        default: null
+    },
+    id_paciente: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Paciente',
+        default: null
+    },
+    nombre_tratamiento: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    tiempo_de_la_medicacion: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    etapa: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    id_usuario: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Usuario',
+        default: null
+    },
+    lente: {
+        type: Boolean,
+        default: false
+    },
+    parche: {
+        type: Boolean,
+        default: false
+    }
+}, {
+    timestamps: true
+});
+
+const Tratamiento = mongoose.model('Tratamiento', tratamientoSchema);
+
+export default Tratamiento;

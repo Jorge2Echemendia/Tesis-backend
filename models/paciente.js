@@ -1,154 +1,128 @@
-import { DataTypes } from "sequelize";
-import db from "../config/db.js";
+import mongoose from 'mongoose';
 
-const Paciente = db.define(
-    "pacientes",
-    {
-      id_paciente: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true,
-      },
-      nombre: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        validate: {
-          notEmpty: true,
-        },
-      },
-      apellido: {
-          type: DataTypes.STRING,
-          allowNull: false,
-          validate: {
-            notEmpty: true,
-          },
-        },
-        
-        fecha_nacimiento: {
-          type: DataTypes.DATE,
-          allowNull: false,
-          unique: true,
-          validate: {
-            notEmpty: true,
-          },
-        },
-      afeccion: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        validate: {
-          notEmpty: true,
-        },
-      },
-      etapa_de_tratamiento: {
-          type: DataTypes.STRING,
-          allowNull: false,
-          validate: {
-            notEmpty: true,
-          },
-        },
-      
-        id_usuario: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-            primaryKey: true,
-            references: {
-                model: 'Usuario',
-                key: 'id_usuario'
-            }
-        },
-        apellido_segundo: {
-          type: DataTypes.STRING,
-          allowNull: false,
-          validate: {
-            notEmpty: true,
-          },
-        },
-        lente: {
-          type: DataTypes.BOOLEAN,
-          defaultValue: false,
-        },
-        parche: {
-          type: DataTypes.BOOLEAN,
-          defaultValue: false,
-        },
-        tipo_lente: {
-          type: DataTypes.STRING(255),
-          defaultValue: null,
-        },
-        tipo_parche: {
-          type: DataTypes.STRING(255),
-          defaultValue: null,
-        },
-        horas_parche: {
-          type: DataTypes.STRING,
-          defaultValue: null,
-        },
-        observaciones_parche: {
-          type: DataTypes.STRING(255),
-          defaultValue: null,
-        },
-        fecha_parche: {
-          type: DataTypes.DATE,
-          defaultValue: null,
-        },
-        graduacion_lente: {
-          type: DataTypes.STRING(255),
-          defaultValue: null,
-        },
-        fecha_lente: {
-          type: DataTypes.DATE,
-          defaultValue: null,
-        },
-        fecha_diagnostico: {
-          type: DataTypes.DATE,
-          defaultValue: null,
-        },
-        grado_miopia: {
-          type: DataTypes.STRING(255),
-          defaultValue: null,
-        },
-        examenes: {
-          type: DataTypes.STRING(255),
-          defaultValue: null,
-        },
-        recomendaciones: {
-          type: DataTypes.STRING(255),
-          defaultValue: null,
-        },
-        correcion_optica: {
-          type: DataTypes.STRING(255),
-          defaultValue: null,
-        },
-        ejercicios_visuales: {
-          type: DataTypes.STRING(255),
-          defaultValue: null,
-        },
-        cambio_optico: {
-          type: DataTypes.STRING(255),
-          defaultValue: null,
-        },
-        consejos_higiene: {
-          type: DataTypes.STRING(255),
-          defaultValue: null,
-        },
-        cirujia: {
-          type: DataTypes.STRING(255),
-          defaultValue: null,
-        },
-        cirujia_fecha: {
-          type: DataTypes.DATE,
-          defaultValue: null,
-        },
-        cirujia_resultados: {
-          type:  DataTypes.STRING(255),
-          defaultValue: null,
-        },
-        progreso: {
-          type: DataTypes.STRING(255),
-          defaultValue: null,
-        },
+const pacienteSchema = new mongoose.Schema({
+    nombre: {
+        type: String,
+        required: true,
+        trim: true
     },
-  );
+    apellido: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    fecha_nacimiento: {
+        type: Date,
+        required: true
+    },
+    afeccion: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    etapa_de_tratamiento: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    id_usuario: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Usuario',
+        required: true
+    },
+    apellido_segundo: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    lente: {
+        type: Boolean,
+        default: false
+    },
+    parche: {
+        type: Boolean,
+        default: false
+    },
+    tipo_lente: {
+        type: String,
+        default: null
+    },
+    tipo_parche: {
+        type: String,
+        default: null
+    },
+    horas_parche: {
+        type: String,
+        default: null
+    },
+    observaciones_parche: {
+        type: String,
+        default: null
+    },
+    fecha_parche: {
+        type: Date,
+        default: null
+    },
+    graduacion_lente: {
+        type: String,
+        default: null
+    },
+    fecha_lente: {
+        type: Date,
+        default: null
+    },
+    fecha_diagnostico: {
+        type: Date,
+        default: null
+    },
+    grado_miopia: {
+        type: String,
+        default: null
+    },
+    examenes: {
+        type: String,
+        default: null
+    },
+    recomendaciones: {
+        type: String,
+        default: null
+    },
+    correcion_optica: {
+        type: String,
+        default: null
+    },
+    ejercicios_visuales: {
+        type: String,
+        default: null
+    },
+    cambio_optico: {
+        type: String,
+        default: null
+    },
+    consejos_higiene: {
+        type: String,
+        default: null
+    },
+    cirujia: {
+        type: String,
+        default: null
+    },
+    cirujia_fecha: {
+        type: Date,
+        default: null
+    },
+    cirujia_resultados: {
+        type: String,
+        default: null
+    },
+    progreso: {
+        type: String,
+        default: null
+    }
+}, {
+    timestamps: true // Esto añadirá createdAt y updatedAt automáticamente
+});
 
+const Paciente = mongoose.model('Paciente', pacienteSchema);
 
 export default Paciente;

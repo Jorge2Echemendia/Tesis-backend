@@ -1,98 +1,86 @@
-import { DataTypes } from "sequelize";
-import db from "../config/db.js";
-import bcrypt from "bcrypt";
+import bcrypt from 'bcrypt';
+import mongoose from 'mongoose';
 import generarId from "../helpers/generarId.js";
 
-const Usuario = db.define(
-  "usuarios",
-  {
-    id_usuario: {
-      type: DataTypes.INTEGER,
-      primaryKey: true,
-      autoIncrement: true,
-    },
+const usuarioSchema = new mongoose.Schema({
     nombre: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      validate: {
-        notEmpty: true,
-      },
+        type: String,
+        required: true,
+        trim: true
     },
     apellido: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        validate: {
-          notEmpty: true,
-        },
-      },
-      email: {
-        type: DataTypes.STRING,
-        allowNull: false,
+        type: String,
+        required: true,
+        trim: true
+    },
+    email: {
+        type: String,
+        required: true,
         unique: true,
-        validate: {
-          notEmpty: true,
-        },
-      },
-      password: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      validate: {
-        notEmpty: true,
-      },
+        trim: true
+    },
+    password: {
+        type: String,
+        required: true
     },
     telefono: {
-      type: DataTypes.STRING,
-      defaultValue: null,
+        type: String,
+        default: null
     },
     imagen: {
-        type: DataTypes.STRING,
-        defaultValue: null,
-      },
+        type: String,
+        default: null
+    },
     token: {
-      type: DataTypes.STRING,
-      defaultValue: null,
+        type: String,
+        default: null
     },
     confirmado: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false,
+        type: Boolean,
+        default: false
     },
     tipo_usuario: {
-      type: DataTypes.STRING,
-      defaultValue: null,
+        type: String,
+        default: null
     },
     notificacion_token: {
-      type: DataTypes.STRING,
-      defaultValue: null,
-    },
-  },
-  {hooks: {
-    beforeCreate: async (usuario) => {
-      const salt = await bcrypt.genSalt(10);
-      usuario.password = await bcrypt.hash(usuario.password, salt);
-      if (usuario.email.includes(".doctor")) {
-        usuario.tipo_usuario = "doctor";
-      } else {
-        usuario.tipo_usuario = "cliente";
-      }
-      usuario.token=generarId();
+        type: String,
+        default: null
+    }
+}, {
+    timestamps: true // Esto reemplaza createdAt y updatedAt de Sequelize
+});
 
-    },
-    beforeUpdate: async (usuario) => {
-      if (usuario.changed("password")) {
-        const salt = await bcrypt.genSalt(10);
-        usuario.password = await bcrypt.hash(usuario.password, salt);
-      }
-      if (usuario.changed("email") && usuario.email !== usuario.previous("email")) {
-    usuario.token = generarId();
-    usuario.confirmado = false;
-  }
-    },
-  },
-  }
-);
-// Método de instancia para comprobar la contraseña
-Usuario.prototype.comprobarPassword = async function (passwordFormulario) {
-  return await bcrypt.compare(passwordFormulario, this.password);
+// Middleware pre-save (equivalente a beforeCreate y beforeUpdate)
+usuarioSchema.pre('save', async function(next) {
+    if (!this.isModified('password')) {
+        next();
+    }
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    
+    if (this.email.includes('.doctor')) {
+        this.tipo_usuario = 'doctor';
+    } else {
+        this.tipo_usuario = 'cliente';
+    }
+    
+    if (this.isNew || this.isModified('email')) {
+        this.token = generarId();
+        if (this.isModified('email')) {
+            this.confirmado = false;
+        }
+    }
+});
+
+// Método para comprobar password
+usuarioSchema.methods.comprobarPassword = async function(passwordFormulario) {
+    if (typeof passwordFormulario !== 'string' || typeof this.password !== 'string') {
+        return false;
+    }
+    return await bcrypt.compare(passwordFormulario, this.password);
 };
+
+const Usuario = mongoose.model('Usuario', usuarioSchema);
 
 export default Usuario;

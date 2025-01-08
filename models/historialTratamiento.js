@@ -1,46 +1,28 @@
-import { DataTypes } from "sequelize";
-import db from '../config/db.js';
+import mongoose from 'mongoose';
 
-const HistorialTratamiento = db.define(
-    "historialtratamientos",
-    {
-        
-        id_historial: {
-            type: DataTypes.INTEGER,
-            primaryKey: true,
-            autoIncrement: true,
-          },
-          fecha_administracion: {
-            type: DataTypes.DATE,
-            allowNull: false,
-            validate: {
-              notEmpty: true,
-            },
-          },
-          ultima_fecha: {
-            type: DataTypes.DATE,
-            allowNull: false,
-            validate: {
-              notEmpty: true,
-            },
-          },
-          id_tratamiento: {
-            type: DataTypes.INTEGER,
-            allowNull: true,
-            references: {
-                model: 'Tratamiento',
-                key: 'id_tratamiento'
-            }
-        },
-            id_paciente: {
-                type: DataTypes.INTEGER,
-                allowNull: true,
-                references: {
-                    model: 'Paciente',
-                    key: 'id_paciente'
-                }
-            },
+const historialTratamientoSchema = new mongoose.Schema({
+    fecha_administracion: {
+        type: Date,
+        required: true
+    },
+    ultima_fecha: {
+        type: Date,
+        required: true
+    },
+    id_tratamiento: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Tratamiento',
+        default: null
+    },
+    id_paciente: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Paciente',
+        default: null
     }
-);
+}, {
+    timestamps: true
+});
+
+const HistorialTratamiento = mongoose.model('HistorialTratamiento', historialTratamientoSchema);
 
 export default HistorialTratamiento;

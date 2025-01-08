@@ -10,19 +10,34 @@ const checkAuth = async (req, res, next) => {
  ) {
     try {
       token = req.headers.authorization.split(" ")[1];
+      
+      if (!token) {
+        return res.status(401).json({
+          msg: 'Token no proporcionado'
+        });
+      }
+
       const decoded = Jwt.verify(token, process.env.JWT_SECRET);
-      req.usuario = await Usuario.findByPk(decoded.id, {
-        attributes: { exclude: ["password", "token", "confirmado"] },
-      });
-      return next(); // Asegúrate de que next() se llame solo si no hay errores
+      req.usuario = await Usuario.findById(decoded.id).select("-password -token -confirmado");
+      
+      if (!req.usuario) {
+        return res.status(403).json({ msg: "Usuario no encontrado" });
+      }
+      
+      return next();
     } catch (error) {
-      return res.status(403).json({ msg: "Token no valido" }); // Utiliza return para salir de la función
+      console.log("Error en verificación:", error);
+      return res.status(401).json({
+        msg: 'Token no válido'
+      });
     }
  }
  if (!token) {
-    return res.status(403).json({ msg: "Token no valido o inexistente" }); // Utiliza return para salir de la función
+    const error = new Error("Token no válido o inexistente");
+    return res.status(401).json({
+      msg: error.message
+    });
  }
- return next(); // Asegúrate de que next() se llame solo si no hay errores
 };
 
 export default checkAuth;

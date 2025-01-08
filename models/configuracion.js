@@ -1,53 +1,38 @@
-import { DataTypes } from "sequelize";
-import db from '../config/db.js';
+import mongoose from 'mongoose';
 
-const Configuracion = db.define(
-    "configuracionesusotelefono",
-    {
-        
-        id_configuracion: {
-            type: DataTypes.INTEGER,
-            primaryKey: true,
-            autoIncrement: true,
-          },
-          tiempo_maximo_dia: {
-            type: DataTypes.STRING,
-            allowNull: false,
-            validate: {
-              notEmpty: true,
-            },
-          },
-          afeccion: {
-            type: DataTypes.STRING,
-            allowNull: false,
-            validate: {
-              notEmpty: true,
-            },
-          },
-          etapa: {
-            type: DataTypes.STRING,
-            allowNull: false,
-            validate: {
-              notEmpty: true,
-            },
-          },
-          lente: {
-            type: DataTypes.BOOLEAN,
-            defaultValue: false,
-          },
-          parche: {
-            type: DataTypes.BOOLEAN,
-            defaultValue: false,
-          },
-            id_paciente: {
-                type: DataTypes.INTEGER,
-                allowNull: true,
-                references: {
-                    model: 'Paciente',
-                    key: 'id_paciente'
-                }
-            },
+const configuracionSchema = new mongoose.Schema({
+    tiempo_maximo_dia: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    afeccion: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    etapa: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    lente: {
+        type: Boolean,
+        default: false
+    },
+    parche: {
+        type: Boolean,
+        default: false
+    },
+    id_paciente: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Paciente',
+        default: null
     }
-);
+}, {
+    timestamps: true
+});
+
+const Configuracion = mongoose.model('Configuracion', configuracionSchema);
 
 export default Configuracion;

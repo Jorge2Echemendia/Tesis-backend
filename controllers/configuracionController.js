@@ -1,200 +1,267 @@
-import { where } from 'sequelize';
 import Configuracion from '../models/configuracion.js';
 import Paciente from '../models/paciente.js';
 
-
 const listarConfiguraciones = async (req, res) => {
     if (req.usuario.tipo_usuario !== "doctor") {
-        console.log(`${req.usuario.tipo_usuario}`)
         const error = new Error("No tienes acceso a esta funcionalidad");
-        return res.status(403).json({ msg: error.message ,success:false,user:req.usuario});
-        }
+        return res.status(403).json({ 
+            msg: error.message,
+            success: false,
+            user: req.usuario
+        });
+    }
     try {
-    const configuracion = await Configuracion.findAll({
-        where:{
-            id_paciente:null
-        }
-    });
-    return res.status(200).json(configuracion);
-} catch (error) {
-    console.error(error);
-    return res.status(500).json({ msg: 'Error al obtener las configuraciones.', success: false });
-}
+        const configuracion = await Configuracion.find({ id_paciente: null });
+        return res.status(200).json(configuracion);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ 
+            msg: 'Error al obtener las configuraciones.', 
+            success: false 
+        });
+    }
 };
 
-const crearConfiguracion=async(req,res)=>{
-
+const crearConfiguracion = async(req, res) => {
     const { afeccion } = req.body;
-    // Verificando que solo el administrador pueda crear tratamientos
+    
     if (req.usuario.tipo_usuario !== "doctor") {
-    const error = new Error("No tienes acceso a esta funcionalidad");
-    return res.status(403).json({ msg: error.message ,success:false});
+        const error = new Error("No tienes acceso a esta funcionalidad");
+        return res.status(403).json({ msg: error.message, success: false});
     }
-    // Verificando si el Tratamiento
-    const configuracionExiste = await Configuracion.findOne({ where: { afeccion } });
+
+    const configuracionExiste = await Configuracion.findOne({ afeccion,etapa });
   
     if (configuracionExiste) {
-      const error = new Error("Esta Configuracion ya exite, verifique");
-      return res.status(404).json({ msg: error.message,success:false });
+        const error = new Error("Esta Configuración ya existe, verifique");
+        return res.status(404).json({ msg: error.message, success: false });
     }
   
     try {
-      // Guardar un Tratamiento
-      const configuracion = await Configuracion.create(req.body);
-
-      return res.json({
-        msg: `La Configuracion ${configuracion.afeccion} fue creado correctamente`,success:true,
-      });
+        const configuracion = await Configuracion.create(req.body);
+        return res.json({
+            msg: `La Configuración ${configuracion.afeccion} fue creada correctamente`,
+            success: true,
+        });
     } catch (error) {
-      const err = new Error("Error al Crear una nuevo configuracion");
-      return res.status(500).json({ msg: err.message ,success:false});
+        return res.status(500).json({ 
+            msg: "Error al Crear una nueva configuración",
+            success: false
+        });
     }
-
 };
 
 const eliminarConfiguracion = async (req, res) => {
     const { id_configuracion } = req.params;
-    const configuracion =await Configuracion.findOne({ where: { id_configuracion } });
+    const configuracion = await Configuracion.findById(id_configuracion);
 
     if (!configuracion) {
-        return res.status(400).json({ msg: 'ID de la Configuracion no encontrado.',success:false });
+        return res.status(400).json({ 
+            msg: 'ID de la Configuración no encontrado.',
+            success: false 
+        });
     }
 
     try {
-        await configuracion.destroy();
-        return res.status(200).json({ msg: 'Configuracion eliminada exitosamente.',success:true });
+        await configuracion.deleteOne();
+        return res.status(200).json({ 
+            msg: 'Configuración eliminada exitosamente.',
+            success: true 
+        });
     } catch (error) {
         console.error(error);
-        return res.status(500).json({ msg: 'Error al eliminar la Configuracion.',success:false });
+        return res.status(500).json({ 
+            msg: 'Error al eliminar la Configuración.',
+            success: false 
+        });
     }
 };
 
-
 const modificarConfiguracion = async (req, res) => {
     const { id_configuracion } = req.params;
-    const configuracion = await Configuracion.findOne({ where: {id_configuracion: id_configuracion } });
-
+    
     if (!id_configuracion) {
-        return res.status(400).json({ msg: 'ID de la Configuracion no encontrado.',success:false });
+        return res.status(400).json({ 
+            msg: 'ID de la Configuración no encontrado.',
+            success: false 
+        });
     }
-    configuracion.afeccion =
-    req.body.afeccion ||configuracion.afeccion;
-    configuracion.tiempo_maximo_dia =
-    req.body.tiempo_maximo_dia || configuracion.tiempo_maximo_dia;
-    configuracion.lente = req.body.lente === undefined ? configuracion.lente : req.body.lente;
-    configuracion.parche = req.body.parche === undefined ? configuracion.parche : req.body.parche;
-    configuracion.etapa=req.body.etapa || configuracion.etapa;
 
-  try {
-    await configuracion.save();
+    try {
+        // Obtener la configuración actual antes de modificarla
+        const configuracionActual = await Configuracion.findById(id_configuracion);
+        if (!configuracionActual) {
+            return res.status(404).json({ 
+                msg: 'Configuración no encontrada',
+                success: false 
+            });
+        }
 
-    res.json({ msg: "Se ah actualizado Correctamente", configuracion,success:true });
-  } catch (error) {
-    const err = new Error("Error al actualizar configuracion");
-    return res.status(500).json({ msg: err.message });
-  }
+        // Guardar los valores originales
+        const valoresOriginales = {
+            afeccion: configuracionActual.afeccion,
+            tiempo_maximo_dia: configuracionActual.tiempo_maximo_dia,
+            lente: configuracionActual.lente,
+            parche: configuracionActual.parche,
+            etapa: configuracionActual.etapa
+        };
+
+        console.log(valoresOriginales);
+
+        // Modificar la configuración actual
+        const configuracionActualizada = await Configuracion.findByIdAndUpdate(
+            id_configuracion,
+            {
+                afeccion: req.body.afeccion,
+                tiempo_maximo_dia: req.body.tiempo_maximo_dia,
+                lente: req.body.lente === undefined ? undefined : req.body.lente,
+                parche: req.body.parche === undefined ? undefined : req.body.parche,
+                etapa: req.body.etapa
+            },
+            { new: true }
+        );
+
+        // Verificar si se actualizó correctamente
+        if (!configuracionActualizada) {
+            return res.status(404).json({ 
+                msg: 'Configuración no encontrada',
+                success: false 
+            });
+        }
+
+        // Buscar otras configuraciones con atributos iguales y que tengan id_paciente
+        const configuracionesSimilares = await Configuracion.find({
+            afeccion: valoresOriginales.afeccion,
+            tiempo_maximo_dia: valoresOriginales.tiempo_maximo_dia,
+            lente: valoresOriginales.lente,
+            parche: valoresOriginales.parche,
+            etapa: valoresOriginales.etapa,
+            id_paciente: { $ne: null } // Asegurarse de que tengan un id_paciente
+        });
+
+        // Actualizar las configuraciones similares
+        await Promise.all(configuracionesSimilares.map(async (config) => {
+            config.afeccion = req.body.afeccion || config.afeccion;
+            config.tiempo_maximo_dia = req.body.tiempo_maximo_dia || config.tiempo_maximo_dia;
+            config.lente = req.body.lente === undefined ? config.lente : req.body.lente;
+            config.parche = req.body.parche === undefined ? config.parche : req.body.parche;
+            config.etapa = req.body.etapa || config.etapa;
+
+            await config.save();
+        }));
+
+        res.json({ 
+            msg: "Se ha actualizado correctamente", 
+            configuracion: configuracionActualizada,
+            success: true 
+        });
+    } catch (error) {
+        console.error('Error completo:', error);
+        return res.status(500).json({ 
+            msg: "Error al actualizar configuración",
+            success: false 
+        });
+    }
 };
 
 const listarConfiguracion = async (req, res) => {
     if (req.usuario.tipo_usuario === "doctor") {
-        console.log(`${req.usuario.tipo_usuario}`)
         const error = new Error("No tienes acceso a esta funcionalidad");
-        return res.status(403).json({ msg: error.message ,success:false,user:req.usuario});
+        return res.status(403).json({ 
+            msg: error.message,
+            success: false,
+            user: req.usuario
+        });
+    }
+
+    const { id_paciente } = req.params;
+    const paciente = await Paciente.findById(id_paciente);
+    
+    if (!paciente) {
+        return res.status(404).json({ 
+            msg: "Paciente no encontrado", 
+            success: false 
+        });
+    }
+    
+    if (!paciente.afeccion) {
+        return res.status(400).json({ 
+            msg: "Paciente no encontrado o no tiene afección", 
+            success: false 
+        });
+    }
+
+    try {
+        // Buscar configuración base según el tipo (lente o parche)
+        let configuracionBase;
+        if (paciente.lente === true) {
+            configuracionBase = await Configuracion.findOne({
+                afeccion: paciente.afeccion,
+                etapa: paciente.etapa_de_tratamiento,
+                lente: true
+            });
+        } else {
+            configuracionBase = await Configuracion.findOne({
+                afeccion: paciente.afeccion,
+                etapa: paciente.etapa_de_tratamiento,
+                parche: true
+            });
         }
 
-        const id_paciente = req.params.id_paciente;
-        const paciente = await Paciente.findOne({ where: { id_paciente: id_paciente } });
-        
-        if (!paciente) {
-            return res.status(404).json({ msg: "'Paciente no encontrado'", success: false });
+        if (!configuracionBase) {
+            return res.status(404).json({ 
+                msg: "Configuración no existente para el paciente", 
+                success: false 
+            });
         }
-        
-        if (!paciente.afeccion) {
-            return res.status(400).json({ msg: "'Paciente no encontrado o no tiene afección'", success: false });
-        }
-        try {
-            if(paciente.lente===true){
-        const configuracionLente = await Configuracion.findOne({
-            where: {
-                    afeccion:paciente.afeccion,
-                    etapa:paciente.etapa_de_tratamiento,
-                    lente:true
-            }
+
+        // Buscar si el paciente ya tiene una configuración asignada
+        const configuracionPerteneciente = await Configuracion.findOne({
+            id_paciente: id_paciente
         });
-        if (!configuracionLente) {
-            return res.status(404).json({ msg: "'Configuracion no encontrado'", success: false });
+
+        if (configuracionPerteneciente) {
+            // Si ya tiene configuración, retornarla
+            return res.json([configuracionPerteneciente]);
         }
-            const configuracionperteneciente=await Configuracion.findOne({
-            where: {
-                id_paciente: id_paciente
-            }});
-        
-            if ( configuracionperteneciente) {
-                // El tratamiento existe y coincide con el paciente actual
-                return res.json([configuracionperteneciente]);
-            } else if (configuracionLente.id_paciente) {
-                // El tratamiento existe pero no coincide con el paciente actual
-                const nuevaConfiguracion = await Configuracion.create({
-                    afeccion: configuracionLente.afeccion,
-                    tiempo_maximo_dia: configuracionLente.tiempo_maximo_dia,
-                    etapa:configuracionLente.etapa,
-                    lente:configuracionLente.lente,
-                    parche:configuracionLente.parche,
-                    id_paciente: paciente.id_paciente,
-                });
-                return res.json([nuevaConfiguracion]);
-            } else {
-                // No hay tratamiento asociado al paciente
-                configuracionLente.id_paciente = paciente.id_paciente;
-                await configuracionLente.save();
-                console.log(`Configuracion asignado al paciente ${paciente.id_paciente}`);
-                return res.json([configuracionLente]);
-            }
-        }else{
-            const configuracionParche = await Configuracion.findOne({
-            where: {
-                    afeccion:paciente.afeccion,
-                    etapa:paciente.etapa_de_tratamiento,
-                    parche:true
-            }
+
+        // Si la configuración base ya está asignada a otro paciente
+        if (!configuracionBase.id_paciente) {
+            // Crear una nueva configuración para este paciente
+            const nuevaConfiguracion = new Configuracion({
+                afeccion: configuracionBase.afeccion,
+                tiempo_maximo_dia: configuracionBase.tiempo_maximo_dia,
+                etapa: configuracionBase.etapa,
+                lente: configuracionBase.lente,
+                parche: configuracionBase.parche,
+                id_paciente: paciente._id
+            });
+
+            await nuevaConfiguracion.save();
+            console.log(`Nueva configuración creada para el paciente ${paciente._id}`);
+            return res.json([nuevaConfiguracion]);
+        } else {
+            // Si la configuración base no está asignada, asignarla a este paciente
+            configuracionBase.id_paciente = paciente._id;
+            await configuracionBase.save();
+            console.log(`Configuración base asignada al paciente ${paciente._id}`);
+            return res.json([configuracionBase]);
+        }
+
+    } catch (error) {
+        console.error('Error completo:', error);
+        res.status(500).json({ 
+            msg: 'Error al obtener las configuraciones por afección', 
+            success: false,
+            error: error.message 
         });
-        if (!configuracionParche) {
-            return res.status(404).json({ msg: "'Configuracion no encontrado'", success: false });
-        }
-            const configuracionperteneciente=await Configuracion.findOne({
-            where: {
-                id_paciente: id_paciente
-            }});
-        
-            if ( configuracionperteneciente) {
-                // El tratamiento existe y coincide con el paciente actual
-                return res.json([configuracionperteneciente]);
-            } else if (configuracionParche.id_paciente) {
-                // El tratamiento existe pero no coincide con el paciente actual
-                const nuevaConfiguracion = await Configuracion.create({
-                    afeccion: configuracionParche.afeccion,
-                    tiempo_maximo_dia: configuracionParche.tiempo_maximo_dia,
-                    etapa:configuracionParche.etapa,
-                    lente:configuracionParche.lente,
-                    parche:configuracionParche.parche,
-                    id_paciente: paciente.id_paciente,
-                });
-                return res.json([nuevaConfiguracion]);
-            } else {
-                // No hay tratamiento asociado al paciente
-                configuracionParche.id_paciente = paciente.id_paciente;
-                await configuracionParche.save();
-                console.log(`Configuracion asignado al paciente ${paciente.id_paciente}`);
-                return res.json([configuracionParche]);
-            }
-    }
-        }catch (error) {
-        console.error(error);
-        res.status(500).json({ msg: 'Error al obtener las configuraciones por aficción', success: false });
     }
 };
-
-
-
-export { crearConfiguracion, eliminarConfiguracion, listarConfiguracion, listarConfiguraciones, modificarConfiguracion };
+export {
+    crearConfiguracion,
+    eliminarConfiguracion,
+    listarConfiguracion,
+    listarConfiguraciones,
+    modificarConfiguracion
+};
 

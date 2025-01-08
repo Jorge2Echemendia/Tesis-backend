@@ -1,71 +1,56 @@
-import { DataTypes } from "sequelize";
-import db from '../config/db.js';
+import mongoose from 'mongoose';
 
-const Notas =db.define(
-    "notas",
-    {
-        id_notas: {
-          type: DataTypes.INTEGER,
-          primaryKey: true,
-          autoIncrement: true,
-        },
-        nombre_notas: {
-          type: DataTypes.STRING,
-          allowNull: false,
-          validate: {
-            notEmpty: true,
-          },
-        },
-        motivo: {
-            type: DataTypes.STRING,
-            allowNull: false,
-            validate: {
-              notEmpty: true,
-            },
-          },
-        contenido: {
-            type: DataTypes.STRING,
-            allowNull: false,
-            validate: {
-              notEmpty: true,
-            },
-          },
-          frecuencia: {
-            type: DataTypes.INTEGER,
-            defaultValue: null,
-          },
-        hora_programada: {
-          type: DataTypes.DATE,
-          defaultValue: null,
-        },
-        tiempo_de_intervalo: {
-            type: DataTypes.STRING,
-            defaultValue: null,
-            },
-            recordatorio: {
-              type: DataTypes.BOOLEAN,
-              defaultValue: false,
-            },
-            recordatorio_continuo: {
-              type: DataTypes.BOOLEAN,
-              defaultValue: false,
-            },
-            id_usuario: {
-                type: DataTypes.INTEGER,
-              defaultValue:null,
-              references: {
-                  model: 'Usuario',
-                  key: 'id_usuario'
-              }
-            },
-          id_paciente: {
-              type: DataTypes.INTEGER,
-              defaultValue:null,
-              references: {
-                  model: 'Paciente',
-                  key: 'id_paciente'
-              }
-          },
-      },
-    );
-    export default Notas;
+const notasSchema = new mongoose.Schema({
+    nombre_notas: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    motivo: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    contenido: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    frecuencia: {
+        type: Number,
+        default: null
+    },
+    hora_programada: {
+        type: Date,
+        default: null
+    },
+    tiempo_de_intervalo: {
+        type: String,
+        default: null,
+        trim: true
+    },
+    recordatorio: {
+        type: Boolean,
+        default: false
+    },
+    recordatorio_continuo: {
+        type: Boolean,
+        default: false
+    },
+    id_usuario: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Usuario',
+        default: null
+    },
+    id_paciente: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Paciente',
+        default: null
+    }
+}, {
+    timestamps: true
+});
+
+const Notas = mongoose.model('Notas', notasSchema);
+
+export default Notas;

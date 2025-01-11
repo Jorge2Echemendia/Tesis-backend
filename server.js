@@ -19,7 +19,7 @@ dotenv.config(); // Cargar variables de entorno
 const __filename = fileURLToPath(import.meta.url);
 
 async function initFirebaseAdmin() {
-  const serviceAccountJson = {
+  const service = {
     "type": process.env.FIREBASE_TYPE,
     "project_id": process.env.FIREBASE_PROJECT_ID,
     "private_key_id": process.env.FIREBASE_PRIVATE_KEY_ID,
@@ -35,7 +35,7 @@ async function initFirebaseAdmin() {
 
   try {
     admin.initializeApp({
-      credential: admin.credential.cert(serviceAccountJson),
+      credential: admin.credential.cert(service),
     });
     console.log('Firebase Admin initialized successfully');
   } catch (error) {

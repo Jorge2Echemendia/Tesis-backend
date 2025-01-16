@@ -1,47 +1,50 @@
-import express from 'express';
 import cors from 'cors';
 import dotenv from "dotenv";
+import express from 'express';
+import admin from 'firebase-admin';
 import { createServer } from 'http';
 import logger from 'morgan';
+import { fileURLToPath } from 'url';
 import db from "./config/db.js";
-import userRoutes from './routes/userRoutes.js';
-import pacienteRoutes from './routes/pacienteRoutes.js';
-import tratamientoRoutes from './routes/tratamientoRoutes.js';
+import { initNotifications } from './controllers/notificationController.js';
 import configuracionRoutes from './routes/configuracionRoutes.js';
 import historialtratamientosRoutes from './routes/historialtratamientosRoutes.js';
 import notasRoutes from './routes/notasRoutes.js';
-import admin from 'firebase-admin';
-import { fileURLToPath } from 'url';
-import { initNotifications } from './controllers/notificationController.js';
+import pacienteRoutes from './routes/pacienteRoutes.js';
+import tratamientoRoutes from './routes/tratamientoRoutes.js';
+import userRoutes from './routes/userRoutes.js';
+import firebase from'./config/firebase.js'
 
 dotenv.config(); // Cargar variables de entorno
 
 const __filename = fileURLToPath(import.meta.url);
 
 async function initFirebaseAdmin() {
-  const service = {
-    "type": process.env.FIREBASE_TYPE,
-    "project_id": process.env.FIREBASE_PROJECT_ID,
-    "private_key_id": process.env.FIREBASE_PRIVATE_KEY_ID,
-    "private_key": process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'), // Reemplazar \n por saltos de línea
-    "client_email": process.env.FIREBASE_CLIENT_EMAIL,
-    "client_id": process.env.FIREBASE_CLIENT_ID,
-    "auth_uri": process.env.FIREBASE_AUTH_URI,
-    "token_uri": process.env.FIREBASE_TOKEN_URI,
-    "auth_provider_x509_cert_url": process.env.FIREBASE_AUTH_PROVIDER_CERT_URL,
-    "client_x509_cert_url": process.env.FIREBASE_CLIENT_CERT_URL,
-    "universe_domain": process.env.FIREBASE_UNIVERSE_DOMAIN
+  const serviceAccountJson = {
+    "type":firebase.type,
+    "project_id":firebase.project_id,
+    "private_key_id":firebase.private_key_id,
+    "private_key":firebase.private_key,
+    "client_email":firebase.client_email,
+    "client_id":firebase.client_id,
+    "auth_uri":firebase.auth_uri,
+    "token_uri":firebase.token_uri,
+    "auth_provider_x509_cert_url":firebase.auth_provider_x509_cert_url,
+    "client_x509_cert_url":firebase.client_x509_cert_url,
+    "universe_domain":firebase.universe_domain
   };
 
   try {
     admin.initializeApp({
-      credential: admin.credential.cert(service),
+      credential: admin.credential.cert(serviceAccountJson),
     });
     console.log('Firebase Admin initialized successfully');
   } catch (error) {
     console.error('Error initializing Firebase Admin:', error);
-  }
+  };
 }
+
+
 
 initFirebaseAdmin().then(async () => {
   try {
@@ -63,7 +66,7 @@ initFirebaseAdmin().then(async () => {
     await db();
 
     // Configuración de CORS
-    const dominiosPermitidos = ["http://192.168.43.105:3000"];
+    const dominiosPermitidos = ["http://192.168.43.106:3000"];
     const corsOptions = {
       origin: function(origin, callback) {
         if (dominiosPermitidos.indexOf(origin) !== -1 || !origin) {
@@ -85,7 +88,7 @@ initFirebaseAdmin().then(async () => {
     app.use("/notas", notasRoutes);
 
     // Iniciar servidor
-    server.listen(PORT, '192.168.43.105', () => {
+    server.listen(PORT, '192.168.43.106', () => {
       console.log(`Servidor iniciado en el puerto ${PORT}`);
     });
 
